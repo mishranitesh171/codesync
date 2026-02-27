@@ -20,6 +20,8 @@ const Dashboard = () => {
   const [joinRoomId, setJoinRoomId] = useState('');
   const [creating, setCreating] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Fetch user's rooms
   useEffect(() => {
     fetchRooms();
@@ -89,6 +91,11 @@ const Dashboard = () => {
     toast.success('Room ID copied!');
   };
 
+  const filteredRooms = rooms.filter(room =>
+    room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    room.roomId.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -116,160 +123,200 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="dashboard-page">
-      {/* Header */}
-      <div className="dashboard-header animate-in">
-        <div>
-          <h1>
-            ⚡ <span>CodeSync</span>
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: 4 }}>
-            Welcome, <strong>{user?.username}</strong>
-          </p>
+    <div className="layout-wrapper">
+      {/* Sidebar Navigation */}
+      <aside className="sidebar animate-in">
+        <div className="sidebar-brand">
+          <div className="sidebar-logo-icon">⚡</div>
+          <span>CodeSync</span>
         </div>
-        <div className="dashboard-actions">
-          <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-            <span><FiPlus /> New Room</span>
-          </button>
-          <button className="btn-secondary" onClick={() => setShowJoinModal(true)}>
-            <FiLogIn /> Join Room
-          </button>
-          <button className="btn-icon" onClick={logout} title="Logout">
-            <FiLogOut />
-          </button>
-        </div>
-      </div>
 
-      {/* Rooms Grid */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 60 }}>
-          <div className="spinner" style={{ width: 40, height: 40, margin: '0 auto' }}></div>
+        <nav className="sidebar-nav">
+          <div className="nav-item active">
+            <FiCode /> Dashboard
+          </div>
+          <div className="nav-item" onClick={() => setShowCreateModal(true)}>
+            <FiPlus /> New Room
+          </div>
+          <div className="nav-item" onClick={() => setShowJoinModal(true)}>
+            <FiLogIn /> Join Room
+          </div>
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="nav-item" onClick={logout}>
+            <FiLogOut /> Logout
+          </div>
         </div>
-      ) : (
-        <div className="dashboard-grid">
-          {rooms.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">🚀</div>
-              <h3>No rooms yet</h3>
-              <p>Create your first collaborative coding room or join an existing one to start coding together.</p>
-              <button
-                className="btn-primary"
-                style={{ marginTop: 20 }}
-                onClick={() => setShowCreateModal(true)}
-              >
-                <span><FiPlus /> Create Your First Room</span>
-              </button>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="main-content">
+        <header className="dashboard-header animate-slide-up">
+          <div>
+            <h1>
+              <span>Overview</span>
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: 8 }}>
+              Welcome back, <span style={{ color: '#fff', fontWeight: 600 }}>{user?.username}</span> 👋
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Search rooms..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ width: 240, paddingRight: 40 }}
+              />
             </div>
-          ) : (
-            rooms.map((room) => (
-              <div
-                key={room._id}
-                className="room-card glass-card"
-                onClick={() => navigate(`/editor/${room.roomId}`)}
-              >
-                <div className="room-card-header">
-                  <h3>{room.name}</h3>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button
-                      className="btn-icon"
-                      style={{ width: 32, height: 32, fontSize: '0.85rem' }}
-                      onClick={(e) => copyRoomId(room.roomId, e)}
-                      title="Copy Room ID"
-                    >
-                      <FiCopy />
-                    </button>
-                    {room.owner?._id === user?._id && (
+            <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+              <FiPlus /> Create Room
+            </button>
+          </div>
+        </header>
+
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40vh' }}>
+            <div className="spinner" style={{ width: 48, height: 48 }}></div>
+          </div>
+        ) : (
+          <div className="dashboard-grid">
+            {rooms.length === 0 ? (
+              <div className="empty-state animate-slide-up">
+                <div className="empty-state-icon">✨</div>
+                <h3>Your workspace is empty</h3>
+                <p>Create a collab room to start coding with your team in real-time.</p>
+                <button
+                  className="btn-primary"
+                  style={{ margin: '0 auto' }}
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  <FiPlus /> Create Your First Room
+                </button>
+              </div>
+            ) : filteredRooms.length === 0 ? (
+              <div className="empty-state animate-fade-in" style={{ gridColumn: '1/-1' }}>
+                <p>No rooms matching "{searchQuery}"</p>
+              </div>
+            ) : (
+              filteredRooms.map((room, index) => (
+                <div
+                  key={room._id}
+                  className="room-card glass-card animate-slide-up"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                  onClick={() => navigate(`/editor/${room.roomId}`)}
+                >
+                  <div className="room-card-header">
+                    <h3>{room.name}</h3>
+                    <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         className="btn-icon"
-                        style={{ width: 32, height: 32, fontSize: '0.85rem', color: 'var(--error)' }}
-                        onClick={(e) => handleDeleteRoom(room.roomId, e)}
-                        title="Delete Room"
+                        style={{ width: 34, height: 34 }}
+                        onClick={(e) => copyRoomId(room.roomId, e)}
+                        title="Copy Room ID"
                       >
-                        <FiTrash2 />
+                        <FiCopy size={14} />
                       </button>
-                    )}
+                      {room.owner?._id === user?._id && (
+                        <button
+                          className="btn-icon"
+                          style={{ width: 34, height: 34, color: 'var(--error)' }}
+                          onClick={(e) => handleDeleteRoom(room.roomId, e)}
+                          title="Delete Room"
+                        >
+                          <FiTrash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="room-card-meta">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <FiHash size={13} />
+                      <span style={{ fontFamily: 'var(--font-mono)' }}>{room.roomId}</span>
+                    </div>
+                    <span>•</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <FiCode size={13} />
+                      <span>{room.language}</span>
+                    </div>
+                  </div>
+
+                  <div className="room-card-footer">
+                    <div className="room-card-participants">
+                      {room.participants?.slice(0, 4).map((p, i) => (
+                        <img key={p._id || i} src={p.avatar} alt={p.username} title={p.username} />
+                      ))}
+                      {room.participants?.length > 4 && (
+                        <div
+                          style={{
+                            marginLeft: -8, width: 32, height: 32, borderRadius: '50%',
+                            background: 'var(--bg-tertiary)', border: '2px solid var(--bg-secondary)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-secondary)',
+                            zIndex: 5
+                          }}
+                        >
+                          +{room.participants.length - 4}
+                        </div>
+                      )}
+                    </div>
+                    <div className="badge badge-info">
+                      <FiUsers size={12} />
+                      {room.participants?.length || 0}
+                    </div>
                   </div>
                 </div>
-
-                <div className="room-card-meta">
-                  <FiHash size={12} />
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>{room.roomId}</span>
-                  <span>•</span>
-                  <FiCode size={12} />
-                  <span>{room.language}</span>
-                  <span>•</span>
-                  <FiClock size={12} />
-                  <span>{formatDate(room.updatedAt)}</span>
-                </div>
-
-                <div className="room-card-footer">
-                  <div className="room-card-participants">
-                    {room.participants?.slice(0, 4).map((p, i) => (
-                      <img key={p._id || i} src={p.avatar} alt={p.username} title={p.username} />
-                    ))}
-                    {room.participants?.length > 4 && (
-                      <span
-                        style={{
-                          marginLeft: -8,
-                          width: 28, height: 28, borderRadius: '50%',
-                          background: 'var(--bg-tertiary)', border: '2px solid var(--bg-primary)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-secondary)',
-                        }}
-                      >
-                        +{room.participants.length - 4}
-                      </span>
-                    )}
-                  </div>
-                  <span className="badge badge-info">
-                    <FiUsers size={11} style={{ marginRight: 4 }} />
-                    {room.participants?.length || 0}
-                  </span>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
+              ))
+            )}
+          </div>
+        )}
+      </main>
 
       {/* Create Room Modal */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal glass-card" onClick={(e) => e.stopPropagation()}>
-            <h2>✨ Create New Room</h2>
+          <div className="modal glass-card animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <FiPlus style={{ color: 'var(--primary)' }} /> Create Room
+            </h2>
             <form onSubmit={handleCreateRoom}>
-              <div className="auth-form">
-                <div className="form-group">
-                  <label>Room Name</label>
-                  <input
-                    className="input-field"
-                    placeholder="e.g., Algorithm Practice"
-                    value={newRoomName}
-                    onChange={(e) => setNewRoomName(e.target.value)}
-                    autoFocus
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Language</label>
-                  <select
-                    className="input-field"
-                    value={newRoomLanguage}
-                    onChange={(e) => setNewRoomLanguage(e.target.value)}
-                  >
-                    {LANGUAGES.map((lang) => (
-                      <option key={lang.value} value={lang.value}>
-                        {lang.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="form-group">
+                <label>Name your workspace</label>
+                <input
+                  className="input-field"
+                  placeholder="e.g. Frontend Team Collab"
+                  value={newRoomName}
+                  onChange={(e) => setNewRoomName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="form-group" style={{ marginTop: 20 }}>
+                <label>Primary Language</label>
+                <select
+                  className="input-field"
+                  value={newRoomLanguage}
+                  onChange={(e) => setNewRoomLanguage(e.target.value)}
+                  style={{ appearance: 'none' }}
+                >
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowCreateModal(false)}>
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary" disabled={creating}>
-                  <span>{creating ? 'Creating...' : 'Create Room'}</span>
+                  {creating ? <div className="spinner" style={{ width: 16, height: 16 }}></div> : <FiPlus />}
+                  {creating ? 'Creating...' : 'Create Room'}
                 </button>
               </div>
             </form>
@@ -280,28 +327,28 @@ const Dashboard = () => {
       {/* Join Room Modal */}
       {showJoinModal && (
         <div className="modal-overlay" onClick={() => setShowJoinModal(false)}>
-          <div className="modal glass-card" onClick={(e) => e.stopPropagation()}>
-            <h2>🔗 Join Room</h2>
+          <div className="modal glass-card animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <FiLogIn style={{ color: 'var(--primary)' }} /> Join Session
+            </h2>
             <form onSubmit={handleJoinRoom}>
-              <div className="auth-form">
-                <div className="form-group">
-                  <label>Room ID</label>
-                  <input
-                    className="input-field"
-                    placeholder="Enter room ID (e.g., a1b2c3d4)"
-                    value={joinRoomId}
-                    onChange={(e) => setJoinRoomId(e.target.value)}
-                    autoFocus
-                    style={{ fontFamily: 'var(--font-mono)' }}
-                  />
-                </div>
+              <div className="form-group">
+                <label>Paste Room ID</label>
+                <input
+                  className="input-field"
+                  placeholder="e.g. 5f8d2..."
+                  value={joinRoomId}
+                  onChange={(e) => setJoinRoomId(e.target.value)}
+                  autoFocus
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                />
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowJoinModal(false)}>
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary">
-                  <span>Join Room</span>
+                  <FiLogIn /> Join Now
                 </button>
               </div>
             </form>
