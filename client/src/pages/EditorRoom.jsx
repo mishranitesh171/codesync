@@ -19,6 +19,26 @@ import {
   FiVideo, FiMic, FiVideoOff, FiMicOff, FiSidebar
 } from 'react-icons/fi';
 
+const LANGUAGES = [
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'python', label: 'Python' },
+  { value: 'java', label: 'Java' },
+  { value: 'cpp', label: 'C++' },
+  { value: 'c', label: 'C' },
+  { value: 'csharp', label: 'C#' },
+  { value: 'go', label: 'Go' },
+  { value: 'rust', label: 'Rust' },
+  { value: 'php', label: 'PHP' },
+  { value: 'ruby', label: 'Ruby' },
+  { value: 'swift', label: 'Swift' },
+  { value: 'kotlin', label: 'Kotlin' },
+  { value: 'html', label: 'HTML' },
+  { value: 'css', label: 'CSS' },
+  { value: 'sql', label: 'SQL' },
+  { value: 'json', label: 'JSON' },
+];
+
 const EditorRoom = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -98,14 +118,28 @@ const EditorRoom = () => {
       toast(`${username} left the session`, { icon: '👋' });
     });
 
+    // Listen for language change from other users
+    socket.on('language-update', (newLang) => {
+      setLanguage(newLang);
+    });
+
     return () => {
       socket.off('code-update');
       socket.off('cursor-update');
       socket.off('room-info');
       socket.off('user-joined');
       socket.off('user-left');
+      socket.off('language-update');
     };
   }, [socket, isConnected, roomId, user]);
+
+  // Handle language change
+  const handleLanguageChange = (newLang) => {
+    setLanguage(newLang);
+    if (socket && isConnected) {
+      socket.emit('language-change', { roomId, language: newLang });
+    }
+  };
 
   // Handle code change
   const handleCodeChange = (newCode) => {
@@ -166,7 +200,15 @@ const EditorRoom = () => {
           </button>
           <div className="room-info">
             <h2>{room.name}</h2>
-            <span className="badge badge-info">{language}</span>
+            <select
+              className="language-selector"
+              value={language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+            >
+              {LANGUAGES.map((lang) => (
+                <option key={lang.value} value={lang.value}>{lang.label}</option>
+              ))}
+            </select>
             <div className={`status-dot ${isConnected ? 'online' : 'offline'}`}></div>
           </div>
         </div>

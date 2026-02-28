@@ -65,6 +65,12 @@ const setupSocket = (io) => {
       socket.to(roomId).emit('code-update', code);
     });
 
+    // Language Change
+    socket.on('language-change', ({ roomId, language }) => {
+      // Broadcast language to everyone else in the room
+      socket.to(roomId).emit('language-update', language);
+    });
+
     // Cursor Move
     socket.on('cursor-move', ({ roomId, cursor }) => {
       const room = roomState.get(roomId);

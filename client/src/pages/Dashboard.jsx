@@ -166,7 +166,7 @@ const Dashboard = () => {
             <h1>
               <span>Overview</span>
             </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: 8 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: 6 }}>
               Welcome back, <span style={{ color: '#fff', fontWeight: 600 }}>{user?.username}</span> 👋
             </p>
           </div>
