@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { FiUser, FiMail, FiLock, FiUserPlus } from 'react-icons/fi';
+import AuthBackground from '../components/AuthBackground';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -37,6 +38,7 @@ const Signup = () => {
 
   return (
     <div className="auth-page">
+      <AuthBackground />
       <div className="auth-container">
         <div className="auth-card glass-card">
           <div className="auth-logo">

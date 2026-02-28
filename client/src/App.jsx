@@ -3,6 +3,8 @@ import { useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import EditorRoom from './pages/EditorRoom';
 
@@ -56,6 +58,14 @@ function App() {
           </PublicRoute>
         }
       />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
@@ -79,9 +89,18 @@ function App() {
         }
       />
 
+      {/* Landing Page */}
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <Home />
+          </PublicRoute>
+        }
+      />
+
       {/* Default Redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

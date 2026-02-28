@@ -5,7 +5,7 @@ import api from '../utils/api';
 import toast from 'react-hot-toast';
 import {
   FiPlus, FiLogIn, FiLogOut, FiCode, FiClock,
-  FiUsers, FiTrash2, FiCopy, FiHash
+  FiUsers, FiTrash2, FiCopy, FiHash, FiMenu, FiX
 } from 'react-icons/fi';
 
 const Dashboard = () => {
@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [creating, setCreating] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Fetch user's rooms
   useEffect(() => {
@@ -124,8 +125,16 @@ const Dashboard = () => {
 
   return (
     <div className="layout-wrapper">
+      {/* Mobile Sidebar Toggle */}
+      <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+        {sidebarOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+      </button>
+
+      {/* Sidebar Overlay (Mobile) */}
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
       {/* Sidebar Navigation */}
-      <aside className="sidebar animate-in">
+      <aside className={`sidebar animate-in ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
           <div className="sidebar-logo-icon">⚡</div>
           <span>CodeSync</span>
@@ -170,7 +179,7 @@ const Dashboard = () => {
                 placeholder="Search rooms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ width: 240, paddingRight: 40 }}
+                style={{ maxWidth: 240 }}
               />
             </div>
             <button className="btn-primary" onClick={() => setShowCreateModal(true)}>

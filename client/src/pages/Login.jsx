@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { FiMail, FiLock, FiLogIn } from 'react-icons/fi';
+import AuthBackground from '../components/AuthBackground';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -32,6 +33,7 @@ const Login = () => {
 
   return (
     <div className="auth-page">
+      <AuthBackground />
       <div className="auth-container">
         <div className="auth-card glass-card">
           <div className="auth-logo">
@@ -71,6 +73,12 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
               />
+            </div>
+
+            <div style={{ textAlign: 'right', marginTop: -4 }}>
+              <Link to="/forgot-password" className="forgot-password-link">
+                Forgot password?
+              </Link>
             </div>
 
             <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: 8 }}>

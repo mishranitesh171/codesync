@@ -18,8 +18,29 @@ const setupSocket = (io) => {
         roomState.set(roomId, { users: new Map() });
       }
 
-      // Add user to room state
       const room = roomState.get(roomId);
+
+      // --- Deduplication Logic ---
+      // Check if user already exists in this room (handle stale connections)
+      for (const [existingSocketId, userData] of room.users.entries()) {
+        if (userData.username === username) {
+          console.log(`♻️  Deduplicating user: ${username} (Closing old socket: ${existingSocketId})`);
+          // Disconnect the old socket if it's still there
+          const oldSocket = io.sockets.sockets.get(existingSocketId);
+          if (oldSocket) {
+            oldSocket.leave(roomId);
+            // We don't force disconnect the whole socket to be safe, just clear from room
+          }
+          room.users.delete(existingSocketId);
+          // Notify room that old instance left (clears UI)
+          socket.to(roomId).emit('user-left', {
+            socketId: existingSocketId,
+            username
+          });
+        }
+      }
+
+      // Add user to room state
       room.users.set(socket.id, { username, avatar, cursor: null, color: getNextColor(room.users.size) });
 
       console.log(`🏠 ${username} joined room: ${roomId}`);
@@ -92,6 +113,36 @@ const setupSocket = (io) => {
         }
       });
     });
+
+    // --- WebRTC Signaling ---
+
+    // User calling another user
+    socket.on('call-user', ({ to, offer }) => {
+      console.log(`📞 Call: ${socket.id} -> ${to}`);
+      socket.to(to).emit('call-made', {
+        offer,
+        socketId: socket.id
+      });
+    });
+
+    // Answering a call
+    socket.on('answer-call', ({ to, answer }) => {
+      console.log(`✅ Answer: ${socket.id} -> ${to}`);
+      socket.to(to).emit('answer-made', {
+        socketId: socket.id,
+        answer
+      });
+    });
+
+    // ICE Candidate exchange
+    socket.on('ice-candidate', ({ to, candidate }) => {
+      socket.to(to).emit('ice-candidate', {
+        candidate,
+        socketId: socket.id
+      });
+    });
+
+    // ------------------------
 
     socket.on('disconnect', () => {
       console.log(`👤 User disconnected: ${socket.id}`);

@@ -10,11 +10,13 @@ import CodeEditor from '../components/CodeEditor';
 import AIReviewPanel from '../components/AIReviewPanel';
 import AIChatPanel from '../components/AIChatPanel';
 import VersionHistory from '../components/VersionHistory';
+import MediaManager from '../components/MediaManager';
 
 // Icons
 import {
   FiChevronLeft, FiPlay, FiSave, FiCpu,
-  FiMessageSquare, FiClock, FiSettings, FiUsers
+  FiMessageSquare, FiClock, FiSettings, FiUsers,
+  FiVideo, FiMic, FiVideoOff, FiMicOff, FiSidebar
 } from 'react-icons/fi';
 
 const EditorRoom = () => {
@@ -31,6 +33,11 @@ const EditorRoom = () => {
   const [executing, setExecuting] = useState(false);
   const [output, setOutput] = useState(null);
   const [roomUsers, setRoomUsers] = useState([]);
+
+  // Media state (managed here for toggles)
+  const [isCamOn, setIsCamOn] = useState(true);
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Fetch room details
   useEffect(() => {
@@ -170,26 +177,63 @@ const EditorRoom = () => {
             <span>{roomUsers.length} online</span>
             <div className="avatar-group">
               {roomUsers.slice(0, 3).map(([id, u]) => (
-                <img key={id} src={u.avatar} title={u.username} alt={u.username} />
+                u.avatar ? (
+                  <img key={id} src={u.avatar} title={u.username} alt={u.username} />
+                ) : (
+                  <div key={id} className="avatar-fallback-sm" title={u.username}>
+                    {u.username ? u.username[0].toUpperCase() : 'U'}
+                  </div>
+                )
               ))}
-              {roomUsers.length > 3 && <span>+{roomUsers.length - 3}</span>}
+              {roomUsers.length > 3 && <span className="avatar-more">+{roomUsers.length - 3}</span>}
             </div>
           </div>
         </div>
 
         <div className="nav-right">
+          <div className="nav-media-controls">
+            <button
+              className={`btn-icon-sm ${isMicOn ? 'active' : 'off'}`}
+              onClick={() => setIsMicOn(!isMicOn)}
+              title={isMicOn ? 'Mute Mic' : 'Unmute Mic'}
+            >
+              {isMicOn ? <FiMic size={16} /> : <FiMicOff size={16} />}
+            </button>
+            <button
+              className={`btn-icon-sm ${isCamOn ? 'active' : 'off'}`}
+              onClick={() => setIsCamOn(!isCamOn)}
+              title={isCamOn ? 'Turn Off Camera' : 'Turn On Camera'}
+            >
+              {isCamOn ? <FiVideo size={16} /> : <FiVideoOff size={16} />}
+            </button>
+          </div>
+
+          <div className="v-divider"></div>
+
           <button className="btn-run" onClick={runCode} disabled={executing}>
             {executing ? <div className="spinner-sm"></div> : <FiPlay />}
             Run
           </button>
           <button className="btn-secondary" onClick={saveVersion}>
             <FiSave />
-            Save
+          </button>
+          <button className="btn-icon" onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle Sidebar">
+            <FiSidebar />
           </button>
         </div>
       </nav>
 
       <main className="editor-container">
+        <MediaManager
+          socket={socket}
+          isConnected={isConnected}
+          roomId={roomId}
+          user={user}
+          roomUsers={roomUsers}
+          isCamOn={isCamOn}
+          isMicOn={isMicOn}
+        />
+
         {/* Editor Main Area */}
         <div className="editor-main">
           <div className="editor-wrapper">
@@ -217,7 +261,7 @@ const EditorRoom = () => {
         </div>
 
         {/* Sidebar Panel */}
-        <aside className="editor-sidebar">
+        <aside className={`editor-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-tabs">
             <button
               className={activePanel === 'ai-review' ? 'active' : ''}
